@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">BlueMessage</string>
+    <string name="str_pair_devices">Paired Device</string>
+    <string name="str_available_devices">Available Device</string>
+
+    <string name="str_menu_scan">Scan Devices</string>
 </resources>

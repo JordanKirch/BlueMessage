@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void connent(View v){
+    public void connect(View v){
 
 
         //Checks if Bluetooth is available on device
@@ -38,13 +38,23 @@ public class MainActivity extends AppCompatActivity {
             if(!bluetoothAdapter.isEnabled()){
                 Intent i = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(i, 1);
+
             }
-            //Moves to discover device page
-            Intent intent = new Intent(MainActivity.this, DiscoverDevice.class);
-            //puts username in a string
-            userName = editText.getText().toString();
-            intent.putExtra("userName", userName);
-            startActivity(intent);
+            else{
+                //Moves to discover device page
+                Intent intent = new Intent(MainActivity.this, DiscoverDevice.class);
+                //puts username in a string
+                userName = editText.getText().toString();
+                intent.putExtra("userName", userName);
+                startActivity(intent);
+            }
+
+            if(bluetoothAdapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE){
+                Intent discover = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+                discover.putExtra(bluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+                startActivity(discover);
+            }
+
         }
     }
     @SuppressLint("MissingSuperCall")
