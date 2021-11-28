@@ -15,9 +15,13 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Toast;
 
 public class DiscoverDevice extends AppCompatActivity {
@@ -25,7 +29,11 @@ public class DiscoverDevice extends AppCompatActivity {
     private BluetoothAdapter bluetoothAdapter;
 
     private ChatUtils chatUtils;
-    private TextView textView;
+    private EditText editText;
+    private Button clearButton;
+    private Button sendButton;
+    private ListView listMainChat;
+    private ArrayAdapter<String> adapterChat;
     private String userName;
     private Context context;
     private final int LOCATION_REQUEST = 101;
@@ -62,7 +70,15 @@ public class DiscoverDevice extends AppCompatActivity {
                             break;
                     }
                     break;
+                case MESSAGE_Write:
+                    byte[] bufferW = (byte[])message.obj;
+                    String outputBuffer = new String(bufferW);
+                    adapterChat.add(userName+": " + outputBuffer);
+                    break;
                 case MESSAGE_READ:
+                    byte[] bufferR = (byte[]) message.obj;
+                    String inputBuffer = new String(bufferR, 0, message.arg1);
+                    adapterChat.add(connectedDevice + ": " +inputBuffer);
                     break;
                 case MESSAGE_DEVICE_NAME:
                     connectedDevice = message.getData().getString(DEVICE_NAME);
@@ -90,12 +106,65 @@ public class DiscoverDevice extends AppCompatActivity {
         setContentView(R.layout.activity_discover_device);
         context = this;
         chatUtils = new ChatUtils(context, handler);
-        textView = findViewById(R.id.name);
-
+        //get username from first activity
         userName = getIntent().getExtras().getString("userName");
-        textView.setText(userName);
+
+        initMessage();
 
         initBluetooth();
+    }
+
+    private void initMessage(){
+        listMainChat = findViewById(R.id.list_conversation);
+        editText = findViewById(R.id.message_body);
+
+        adapterChat = new ArrayAdapter<String>(context, R.layout.message_layout);
+        clearButton = findViewById(R.id.clearButton);
+        clearButton.setOnClickListener(new View.OnClickListener(){
+            /**
+             * Clear edit text
+             * @param v
+             */
+            @Override
+            public void onClick(View v){
+                editText.getText().clear();
+            }
+        });
+
+        sendButton = findViewById(R.id.sendButton);
+        sendButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                String message = editText.getText().toString();
+                if(!message.isEmpty()){
+                    editText.getText().clear();
+                    chatUtils.write(message.getBytes());
+                }
+            }
+        });
+    }
+
+    /**
+     * Returns the created menu for the messaging page and allows the suers to see device connecting window
+     * @param menu
+     * @return
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.menu_message_activity, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch (item.getItemId()){
+            case R.id.menu_search_device:
+                checkPermissions();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+
     }
 
     /**
@@ -103,6 +172,7 @@ public class DiscoverDevice extends AppCompatActivity {
      */
     private void initBluetooth(){
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        bluetoothAdapter.setName(userName);
         if(bluetoothAdapter == null){
             Toast.makeText(context, "No Bluetooth on Device", Toast.LENGTH_SHORT).show();
         }
