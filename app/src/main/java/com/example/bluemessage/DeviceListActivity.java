@@ -85,7 +85,7 @@ public class DeviceListActivity extends AppCompatActivity {
 
             if(BluetoothDevice.ACTION_FOUND.equals(action)){
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                if(device.getBondState() != BluetoothDevice. BOND_BONDED){
+                if(device.getBondState() != BluetoothDevice.BOND_BONDED){
                     //if not a paired device add to availableDevices
                     adapterAvailableDevices.add(device.getName() + "\n" + device.getAddress());
                 }
@@ -112,7 +112,6 @@ public class DeviceListActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item){
         switch(item.getItemId()) {
             case R.id.menu_scan:
-                Toast.makeText(context, "Scanning Device", Toast.LENGTH_SHORT).show();
                 scanDevices();
                 return true;
                 default:
@@ -125,6 +124,7 @@ public class DeviceListActivity extends AppCompatActivity {
     private void scanDevices(){
         progressScan.setVisibility(View.VISIBLE);
         adapterAvailableDevices.clear();
+        Toast.makeText(context,"Scan started", Toast.LENGTH_SHORT).show();
         //if currently discovering cancel process
         if(bluetoothAdapter.isDiscovering()){
             bluetoothAdapter.cancelDiscovery();

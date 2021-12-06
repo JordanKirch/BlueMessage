@@ -10,9 +10,9 @@
     <ProgressBar
         android:id="@+id/progress_scan"
         android:layout_width="25dp"
-        android:visibility="gone"
         android:layout_height="25dp"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"
+        android:visibility="gone" />
 
     <TextView
         android:text="@string/str_pair_devices"
