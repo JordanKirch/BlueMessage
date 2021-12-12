@@ -22,7 +22,8 @@ public class ChatUtils {
     private Context context;
     private final Handler handler;
     private BluetoothAdapter bluetoothAdapter;
-    private final UUID APP_UUID = UUID.fromString("fa87c0d0-afac-11de-8a39-0800200c9a66");
+//    private final UUID APP_UUID = UUID.fromString("fa87c0d0-afac-11de-8a39-0800200c9a66");
+    private final UUID APP_UUID = UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66");
     private final String APP_NAME = "BlueMessage";
     private ConnectThread connectionThread;
     private AcceptThread acceptThread;
@@ -98,6 +99,20 @@ public class ChatUtils {
     }
 
     /**
+     * method for when connection is lost between send and receiving messages.
+     * Will send a message to the handler saying the the connection is lost then it will restart ChatUtils for next request
+     */
+    private void connectionLost(){
+        Message message = handler.obtainMessage(DiscoverDevice.MESSAGE_TOAST);
+        Bundle bundle = new Bundle();
+        bundle.putString(DiscoverDevice.TOAST, "Connection Lost");
+        message.setData(bundle);
+        handler.sendMessage(message);
+
+        ChatUtils.this.start();
+    }
+
+    /**
      * checks if the given device is currently connecting if so it will cancel the thread and start a new one
      * The method will also set the State of the connection to CONNECTING
      * @param device
@@ -107,15 +122,44 @@ public class ChatUtils {
             connectionThread.cancel();
             connectionThread = null;
         }
+
+        connectionThread = new ConnectThread(device);
+        connectionThread.start();
+
         if(messageThread != null){
             messageThread.cancel();
             messageThread = null;
         }
 
-        connectionThread = new ConnectThread(device);
-        connectionThread.start();
-
         setState(STATE_CONNECTING);
+    }
+
+    /**
+     * Use the thread to connect to a given device first checks if a device is already connected and if so disconnects from it
+     * then it send a message back to handler that the device is connected and change the state to DEVICE_CONNECTED
+     * @param device
+     */
+    private synchronized void connected(BluetoothDevice device, BluetoothSocket socket){
+        if(connectionThread != null){
+            connectionThread.cancel();
+            connectionThread = null;
+        }
+
+        if(messageThread != null){
+            messageThread.cancel();
+            messageThread = null;
+        }
+
+        messageThread = new MessageThread(socket);
+        messageThread.start();
+
+        Message msg = handler.obtainMessage(DiscoverDevice.MESSAGE_DEVICE_NAME);
+        Bundle bundle = new Bundle();
+        bundle.putString(DiscoverDevice.DEVICE_NAME, device.getName());
+        msg.setData(bundle);
+        handler.sendMessage(msg);
+
+        setState(STATE_CONNECTED);
     }
 
     public void write(byte[] buffer){
@@ -161,18 +205,16 @@ public class ChatUtils {
                 try {
                     serverSocket.close();
                 } catch (IOException e1){
-                    Log.e("Accept to Close", e1.toString());
+                    Log.e("Accept to Close", e.toString());
                 }
             }
             if (socket!= null){
                 switch (state){
                     case STATE_LISTEN:
-                        break;
                     case STATE_CONNECTING:
-                        connect(socket.getRemoteDevice());
+                        connected(socket.getRemoteDevice(), socket);
                         break;
                     case STATE_NONE:
-                        break;
                     case STATE_CONNECTED:
                         try {
                             socket.close();
@@ -195,6 +237,9 @@ public class ChatUtils {
         }
     }
 
+    /**
+     * Thread class used register sent and received messages
+     */
     private class MessageThread extends Thread {
         private final BluetoothSocket socket;
         private final InputStream inputStream;
@@ -249,19 +294,6 @@ public class ChatUtils {
             }
         }
 
-        /**
-         * method for when connection is lost between send and receiving messages.
-         * Will send a message to the handler saying the the connection is lost then it will restart ChatUtils for next request
-         */
-        private void connectionLost(){
-            Message message = handler.obtainMessage(DiscoverDevice.MESSAGE_TOAST);
-            Bundle bundle = new Bundle();
-            bundle.putString(DiscoverDevice.TOAST, "Connection Lost");
-            message.setData(bundle);
-            handler.sendMessage(message);
-
-            ChatUtils.this.start();
-        }
     }
 
     /**
@@ -286,7 +318,7 @@ public class ChatUtils {
         }
 
         /**
-         * tries to create connection between devices and closes the socket if it fails or runs the method connected(device)
+         * tries to create connection between devices and closes the socket if it fails or runs the method connect(device)
          */
         public void run(){
             try {
@@ -299,6 +331,7 @@ public class ChatUtils {
                     Log.e("Connect to CloseSocket", e.toString());
                 }
                 connectionFailed();
+                return;
             }
 
             synchronized (ChatUtils.this){
@@ -334,32 +367,5 @@ public class ChatUtils {
             ChatUtils.this.start();
         }
 
-        /**
-         * Use the thread to connect to a given device first checks if a device is already connected and if so disconnects from it
-         * then it send a message back to handler that the device is connected and change the state to DEVICE_CONNECTED
-         * @param device
-         */
-        private synchronized void connected(BluetoothDevice device, BluetoothSocket socket){
-            if(connectionThread != null){
-                connectionThread.cancel();
-                connectionThread = null;
-            }
-
-            if(messageThread != null){
-                messageThread.cancel();
-                messageThread = null;
-            }
-
-            messageThread = new MessageThread(socket);
-            messageThread.start();
-
-            Message msg = handler.obtainMessage(DiscoverDevice.MESSAGE_DEVICE_NAME);
-            Bundle bundle = new Bundle();
-            bundle.putString(DiscoverDevice.DEVICE_NAME, device.getName());
-            msg.setData(bundle);
-            handler.sendMessage(msg);
-
-            setState(STATE_CONNECTED);
-        }
     }
 }

@@ -48,7 +48,9 @@ public class DiscoverDevice extends AppCompatActivity {
     public static final String DEVICE_NAME = "deviceName";
     public static final String TOAST = "toast";
     private String connectedDevice;
-
+    /**
+     * Handler is used to track what state the device is in during the connection process
+     */
     private Handler handler = new Handler(new Handler.Callback(){
 
         @Override
@@ -60,7 +62,7 @@ public class DiscoverDevice extends AppCompatActivity {
                             setState("Not Connected");
                             break;
                         case ChatUtils.STATE_LISTEN:
-                            setState("Not Connected");
+                            setState("Listening");
                             break;
                         case ChatUtils.STATE_CONNECTING:
                             setState("Connecting...");
@@ -78,11 +80,11 @@ public class DiscoverDevice extends AppCompatActivity {
                 case MESSAGE_READ:
                     byte[] bufferR = (byte[]) message.obj;
                     String inputBuffer = new String(bufferR, 0, message.arg1);
-                    adapterChat.add(connectedDevice + ": " +inputBuffer);
+                    adapterChat.add(connectedDevice + ": " + inputBuffer);
                     break;
                 case MESSAGE_DEVICE_NAME:
                     connectedDevice = message.getData().getString(DEVICE_NAME);
-                    Toast.makeText(context, connectedDevice, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, connectedDevice, Toast.LENGTH_LONG).show();
                     break;
                 case MESSAGE_TOAST:
                     Toast.makeText(context, message.getData().getString(TOAST), Toast.LENGTH_SHORT).show();
@@ -119,6 +121,7 @@ public class DiscoverDevice extends AppCompatActivity {
         editText = findViewById(R.id.message_body);
 
         adapterChat = new ArrayAdapter<String>(context, R.layout.message_layout);
+        listMainChat.setAdapter(adapterChat);
         clearButton = findViewById(R.id.clearButton);
         clearButton.setOnClickListener(new View.OnClickListener(){
             /**
@@ -137,8 +140,8 @@ public class DiscoverDevice extends AppCompatActivity {
             public void onClick(View v){
                 String message = editText.getText().toString();
                 if(!message.isEmpty()){
-                    editText.getText().clear();
                     chatUtils.write(message.getBytes());
+                    editText.getText().clear();
                 }
             }
         });
@@ -190,7 +193,10 @@ public class DiscoverDevice extends AppCompatActivity {
             startActivityForResult(intent, SELECT_DEVICE);
         }
     }
-    //Post the connection log of the device
+
+    /**
+     * Toast the connection log of the device
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
         if(requestCode == SELECT_DEVICE && resultCode == RESULT_OK){
@@ -200,6 +206,14 @@ public class DiscoverDevice extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
+    /**
+     * function runs when the end user clicks the plus button in the main chat window.
+     * It request the users location to find blue tooth devices and opens the DevicelistActivity
+     * where the user can scan and connect to devices.
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     */
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
         if(requestCode == LOCATION_REQUEST){
             if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){

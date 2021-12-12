@@ -60,6 +60,20 @@ public class DeviceListActivity extends AppCompatActivity {
             }
         });
 
+        listPairedDevices.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+            //Send device info to the message page
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                String info = ((TextView) view).getText().toString();
+                String address = info.substring(info.length() - 17);
+
+                Intent intent = new Intent();
+                intent.putExtra("deviceAddress", address);
+                setResult(RESULT_OK, intent);
+                finish();
+            }
+        });
+
         //scan for paired and add to paired list
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
