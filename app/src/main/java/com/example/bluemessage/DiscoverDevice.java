@@ -15,9 +15,11 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -80,7 +82,7 @@ public class DiscoverDevice extends AppCompatActivity {
                 case MESSAGE_Write:
                     byte[] bufferW = (byte[])message.obj;
                     String outputBuffer = new String(bufferW);
-                    adapterChat.add(userName+": " + outputBuffer);
+                    adapterChat.add("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"+ userName+": " + outputBuffer);
                     break;
                 case MESSAGE_READ:
                     byte[] bufferR = (byte[]) message.obj;
@@ -122,14 +124,28 @@ public class DiscoverDevice extends AppCompatActivity {
     }
 
     /**
-     * initializes the chat list and the buttons on the main page
+     * initializes the chat list, popupmenu and the buttons on the main page
      */
     private void initMessage(){
+        //main list
         listMainChat = findViewById(R.id.list_conversation);
-        editText = findViewById(R.id.message_body);
+        listMainChat.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                final int selected_item = i;
+                adapterChat.remove(adapterChat.getItem(selected_item));
+                adapterChat.notifyDataSetChanged();
+            }
+        });
 
+        //popup menu
+        registerForContextMenu(listMainChat);
+        //text view
+        editText = findViewById(R.id.message_body);
+        //set up array adapter
         adapterChat = new ArrayAdapter<String>(context, R.layout.message_layout);
         listMainChat.setAdapter(adapterChat);
+        //clear button
         clearButton = findViewById(R.id.clearButton);
         clearButton.setOnClickListener(new View.OnClickListener(){
             /**
@@ -141,7 +157,7 @@ public class DiscoverDevice extends AppCompatActivity {
                 editText.setText("");
             }
         });
-
+        //send button
         sendButton = findViewById(R.id.sendButton);
         sendButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -153,6 +169,41 @@ public class DiscoverDevice extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    /**
+     * displays React and Delete menu when the user clicks on a message
+     * @param menu
+     * @param v
+     * @param menuInfo
+     */
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        getMenuInflater().inflate(R.menu.menu_delete_and_react, menu);
+    }
+
+    /**
+     * displays react options and once the user select on a message will be sent with that reaction.
+     * @param item
+     * @return
+     */
+    @Override
+    public boolean onContextItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.lol:
+                chatUtils.write("LOL".getBytes());
+                return true;
+            case R.id.thumbsup:
+                chatUtils.write("Thumbs Up".getBytes());
+                return true;
+            case R.id.thumbsdown:
+                chatUtils.write("Thumbs Down".getBytes());
+                return true;
+                default:
+                    return super.onContextItemSelected(item);
+        }
+
     }
 
     /**
