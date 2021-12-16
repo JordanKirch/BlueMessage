@@ -250,7 +250,7 @@ public class ChatUtils {
     }
 
     /**
-     * Thread class used register sent and received messages
+     * Thread class used to set up input and out put streams to allow the app to send and received messages
      */
     private class MessageThread extends Thread {
         private final BluetoothSocket socket;
