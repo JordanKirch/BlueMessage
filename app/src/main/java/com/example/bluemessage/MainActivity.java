@@ -16,10 +16,6 @@ public class MainActivity extends AppCompatActivity {
     public EditText editText;
     public String userName;
 
-    /**
-     * initialize bluetooth adapter and textview
-     * @param savedInstanceState
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,13 +25,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    /**
-     * Checks if the device has bluetooth on device
-     * if so then it will request to turn on bluetooth if it is not currently on.
-     * Lastly once the bluetooth is on then when the user clicks on the connect button
-     * it will grab the users name update the name of the bluetooth device and send the user the discover device activity.
-     * @param v
-     */
     public void connect(View v){
 
 
@@ -68,13 +57,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
-
-    /**
-     * lets the user know that bluetooth is enabled via toast
-     * @param requestCode
-     * @param resultCode
-     * @param data
-     */
     @SuppressLint("MissingSuperCall")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
