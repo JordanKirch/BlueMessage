@@ -36,6 +36,11 @@ public class ChatUtils {
 
     private int state;
 
+    /**
+     * Constructor to handle the connection and messages between devices
+     * @param context
+     * @param handler
+     */
     public ChatUtils(Context context, Handler handler){
         this.context = context;
         this.handler = handler;
@@ -61,7 +66,7 @@ public class ChatUtils {
     }
 
     /**
-     * Starts all threads for communication and will cancel the thread if a thread is currently active
+     * Starts accept thread for communication and will cancel any other thread if a thread is currently active
      */
     private synchronized void start(){
         if(connectionThread != null){
@@ -81,6 +86,9 @@ public class ChatUtils {
         setState(STATE_LISTEN);
     }
 
+    /**
+     * Stops all threads and sets state to none
+     */
     public synchronized void stop(){
         if(connectionThread != null){
             connectionThread.cancel();
@@ -162,6 +170,10 @@ public class ChatUtils {
         setState(STATE_CONNECTED);
     }
 
+    /**
+     * writes the message of the user into a buffer to be sent over through the socket
+     * @param buffer
+     */
     public void write(byte[] buffer){
         MessageThread mThread;
         synchronized(this){
@@ -264,6 +276,9 @@ public class ChatUtils {
             outputStream = out;
         }
 
+        /**
+         * gets the buffer message and sends it to the main chat page to be displayed
+         */
         public void run() {
             byte[] buffer = new byte[1024];
             int bytes;
@@ -277,6 +292,10 @@ public class ChatUtils {
             }
         }
 
+        /**
+         * writes the buffer message and sends it to the main chat page to be displayed
+         * @param buffer
+         */
         public void write(byte[] buffer){
             try{
                 outputStream.write(buffer);
@@ -286,6 +305,9 @@ public class ChatUtils {
             }
         }
 
+        /**
+         * fail safe to close the socket if a error occurs
+         */
         public void cancel(){
             try{
                 socket.close();
