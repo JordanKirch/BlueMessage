@@ -50,6 +50,11 @@ public class DiscoverDevice extends AppCompatActivity {
     private String connectedDevice;
     /**
      * Handler is used to track what state the device is in during the connection process
+     * The STATE_CHANGE case updates the message that is displayed on the main chat page
+     * Write uploads the users message and displays on screen
+     * Read gets the message from the users device and displays it
+     * Device_name gets connected devices name
+     * Toast tells the user which if the user is connected or if an error occurs
      */
     private Handler handler = new Handler(new Handler.Callback(){
 
@@ -116,6 +121,9 @@ public class DiscoverDevice extends AppCompatActivity {
         initBluetooth();
     }
 
+    /**
+     * initializes the chat list and the buttons on the main page
+     */
     private void initMessage(){
         listMainChat = findViewById(R.id.list_conversation);
         editText = findViewById(R.id.message_body);
@@ -130,7 +138,7 @@ public class DiscoverDevice extends AppCompatActivity {
              */
             @Override
             public void onClick(View v){
-                editText.getText().clear();
+                editText.setText("");
             }
         });
 
@@ -141,7 +149,7 @@ public class DiscoverDevice extends AppCompatActivity {
                 String message = editText.getText().toString();
                 if(!message.isEmpty()){
                     chatUtils.write(message.getBytes());
-                    editText.getText().clear();
+                    editText.setText("");
                 }
             }
         });
@@ -158,6 +166,12 @@ public class DiscoverDevice extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    /**
+     * Method used when the user clicks on the menu button to allow the user
+     * to go to the Device list activity and select a device to connect to.
+     * @param item
+     * @return
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
         switch (item.getItemId()){
@@ -185,6 +199,9 @@ public class DiscoverDevice extends AppCompatActivity {
         checkPermissions();
     }
 
+    /**
+     * allows the device to be discoverable for a given amount of time
+     */
     public void checkPermissions(){
         if(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
             ActivityCompat.requestPermissions(DiscoverDevice.this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST);
@@ -244,6 +261,9 @@ public class DiscoverDevice extends AppCompatActivity {
         }
     }
 
+    /**
+     * Disconnects device on Destroy
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
